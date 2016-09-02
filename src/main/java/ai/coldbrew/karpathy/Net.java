@@ -5,11 +5,13 @@
  */
 package ai.coldbrew.karpathy;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
 import org.json.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Iterator;
+import org.json.JSONArray;
 
 /**
  *
@@ -219,6 +221,62 @@ public class Net {
             JsonNode layerNode = (JsonNode)i.next();
             ILayer layer = loadLayer(layerNode, layers[layerI++]);
         }        
+    }
+    
+    void toJSON(String jsonFile) {
+    
+        JSONObject network = new JSONObject();
+        JSONArray jsonLayers = new JSONArray();
+        network.put("layers", jsonLayers);        
+                
+        for(ILayer layer : layers) {
+            switch(layer.get_layer_type()) {
+                case "input": { 
+                    JSONObject jsonLayer = new JSONObject();
+                    InputLayer l = (InputLayer)layer;
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                    jsonLayer.put("layer_type", l.layer_type);
+                    jsonLayers.put(jsonLayer);
+                    break;
+                }
+                case "softmax": {
+                    JSONObject jsonLayer = new JSONObject();
+                    SoftmaxLayer l = (SoftmaxLayer)layer;
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                    jsonLayer.put("num_inputs", l.num_inputs);
+                    
+                    break;
+                }
+                case "pool": {
+                    JSONObject jsonLayer = new JSONObject();
+                    PoolLayer l = (PoolLayer)layer;
+                    jsonLayer.put("sx", l.sx);
+                    jsonLayer.put("sy", l.sy);
+                    jsonLayer.put("stride", l.stride);
+                    jsonLayer.put("in_depth", l.in_depth);
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                    jsonLayer.put("pad", l.pad);
+                                        
+                    break;
+                }
+                case "relu": {
+                    JSONObject jsonLayer = new JSONObject();
+                    ReluLayer l = (ReluLayer)layer;
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                                        
+                    break;
+                }
+            }
+        }
+        
     }
     
     ILayer loadLayer(JsonNode layerNode, ILayer layer) throws java.lang.Exception {

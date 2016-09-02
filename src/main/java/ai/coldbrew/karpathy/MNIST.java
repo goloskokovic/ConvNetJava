@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class MNIST {
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         
         int num_layers = 6;
         String[] layer_defs = new String[num_layers];  
@@ -28,7 +28,7 @@ public class MNIST {
         layer_defs[5] = "{type:'softmax', num_classes:10}";
         
         String folder = "/home/gola/mnist/train/";
-        try { DataSet.loadImagePaths(folder); } catch (Exception ex) { }
+        DataSet.loadImagePaths(folder);
         
         List<String> paths = DataSet.getImagePaths();
         Map<Integer, String> classes = DataSet.getClassLabels();
@@ -91,6 +91,8 @@ public class MNIST {
             System.out.println("Training accuracy: " + trainAcc.f2t());
             System.out.println("Validation accuracy: " + valAcc.f2t());
             
+//            if (valAcc.f2t() > 0.1)
+//                net.toJSON("");
         }
         
         //} while (xLoss.f2t() > 1.0);
