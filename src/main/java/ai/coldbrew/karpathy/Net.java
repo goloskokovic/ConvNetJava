@@ -5,13 +5,12 @@
  */
 package ai.coldbrew.karpathy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Iterator;
-import org.json.JSONArray;
 
 /**
  *
@@ -205,24 +204,7 @@ public class Net {
       }
       return maxi; // return index of the class with highest class probability
     }
-    
-    void fromJSON(String jsonFile) throws java.lang.Exception {
-        
-        ObjectMapper mapper = new ObjectMapper();
-        //mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        JsonNode root = mapper.readTree(new java.io.File(jsonFile));
-        JsonNode layersNode = root.path("layers");
-        
-        if (layersNode.size() != layers.length)
-            throw new Exception("Number of layers in JSON has to be equal to the number in the network");
-        
-        int layerI=0;
-        for (Iterator i = layersNode.elements(); i.hasNext();) {
-            JsonNode layerNode = (JsonNode)i.next();
-            ILayer layer = loadLayer(layerNode, layers[layerI++]);
-        }        
-    }
-    
+       
     void toJSON(String jsonFile) {
     
         JSONObject network = new JSONObject();
@@ -231,6 +213,53 @@ public class Net {
                 
         for(ILayer layer : layers) {
             switch(layer.get_layer_type()) {
+                case "conv": {
+                    JSONObject jsonLayer = new JSONObject();
+                    ConvLayer l = (ConvLayer)layer;
+                    //{"sx":5,"sy":5,"stride":1,"in_depth":3,"out_depth":16,"out_sx":32,"out_sy":32,"layer_type":"conv","l1_decay_mul":0,"l2_decay_mul":1,"pad":2,
+                    jsonLayer.put("sx", l.sx);
+                    jsonLayer.put("sy", l.sy);
+                    jsonLayer.put("stride", l.stride);
+                    jsonLayer.put("in_depth", l.in_depth);
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                    jsonLayer.put("layer_type", l.layer_type);
+                    jsonLayer.put("l1_decay_mul", l.l1_decay_mul);
+                    jsonLayer.put("l2_decay_mul", l.l2_decay_mul);
+                    jsonLayer.put("pad", l.pad);
+                    
+                    JSONArray jsonFilters = new JSONArray();
+                    for (Vol filter : l.filters) {
+                        JSONObject jsonFilter = new JSONObject();
+                        jsonFilter.put("sx", filter.sx);
+                        jsonFilter.put("sy", filter.sy);
+                        jsonFilter.put("depth", filter.depth);
+                    
+                        JSONObject jsonW = new JSONObject();
+                        for(int wI=0; wI<filter.w.length; wI++) { 
+                            jsonW.put((String.valueOf(wI)), filter.w[wI]);
+                        }
+                        jsonFilter.put("w", jsonW);
+                        jsonFilters.put(jsonFilter);
+                    }
+                                        
+                    JSONObject jsonBiases = new JSONObject();
+                    jsonBiases.put("sx", l.biases.sx);
+                    jsonBiases.put("sy", l.biases.sy);
+                    jsonBiases.put("depth", l.biases.depth);
+                    
+                    JSONObject jsonW = new JSONObject();
+                    for(int wI=0; wI<l.biases.w.length; wI++) { 
+                        jsonW.put((String.valueOf(wI)), l.biases.w[wI]);
+                    }
+                    
+                    jsonBiases.put("w", jsonW);
+                    jsonLayer.put("biases", jsonBiases);
+                    jsonLayers.put(jsonLayer);
+                                       
+                    break;
+                }
                 case "input": { 
                     JSONObject jsonLayer = new JSONObject();
                     InputLayer l = (InputLayer)layer;
@@ -279,6 +308,22 @@ public class Net {
         
     }
     
+    void fromJSON(String jsonFile) throws java.lang.Exception {
+        
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(new java.io.File(jsonFile));
+        JsonNode layersNode = root.path("layers");
+        
+        if (layersNode.size() != layers.length)
+            throw new Exception("Number of layers in JSON has to be equal to the number in the network");
+        
+        int layerI=0;
+        for (Iterator i = layersNode.elements(); i.hasNext();) {
+            JsonNode layerNode = (JsonNode)i.next();
+            ILayer layer = loadLayer(layerNode, layers[layerI++]);
+        }        
+    }
+    
     ILayer loadLayer(JsonNode layerNode, ILayer layer) throws java.lang.Exception {
         
         String layer_type = layerNode.path("layer_type").asText();
@@ -307,10 +352,10 @@ public class Net {
                             biasesNode.path("depth").asInt(), 
                             0.0);
 
-                    int biasI=0;
+                    int wI=0;
                     for (Iterator i = biasesNode.path("w").elements(); i.hasNext();) {
                         JsonNode wNode = (JsonNode)i.next();
-                        l.biases.w[biasI++] = wNode.asDouble();
+                        l.biases.w[wI++] = wNode.asDouble();
                     }
                     
                     int filI=0;
@@ -324,10 +369,10 @@ public class Net {
                             volNode.path("depth").asInt(), 
                             0.0);
                         
-                        int volI=0;
+                        int filwI=0;
                         for (Iterator j = volNode.path("w").elements(); j.hasNext();) {
                             JsonNode wNode = (JsonNode)j.next();
-                            v.w[volI++] = wNode.asDouble();
+                            v.w[filwI++] = wNode.asDouble();
                         }
                         
                         l.filters[filI++] = v;
@@ -351,10 +396,10 @@ public class Net {
                             biasesNode.path("depth").asInt(), 
                             0.0);
                     
-                    int biasI=0;
+                    int wI=0;
                     for (Iterator i = biasesNode.path("w").elements(); i.hasNext();) {
                         JsonNode wNode = (JsonNode)i.next();
-                        l.biases.w[biasI++] = wNode.asDouble();
+                        l.biases.w[wI++] = wNode.asDouble();
                     } 
 
                     int filI=0;
@@ -368,10 +413,10 @@ public class Net {
                             volNode.path("depth").asInt(), 
                             0.0);
                         
-                        int volI=0;
+                        int filwI=0;
                         for (Iterator j = volNode.path("w").elements(); j.hasNext();) {
                             JsonNode wNode = (JsonNode)j.next();
-                            v.w[volI++] = wNode.asDouble();
+                            v.w[filwI++] = wNode.asDouble();
                         }
                         
                         l.filters[filI++] = v;
