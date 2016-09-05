@@ -46,7 +46,7 @@ public class MNIST {
         int iteration = 0; 
         long start = new Date().getTime();
         
-        //do {
+//        do {
         
         for(String path : paths) {
             
@@ -91,11 +91,12 @@ public class MNIST {
             System.out.println("Training accuracy: " + trainAcc.f2t());
             System.out.println("Validation accuracy: " + valAcc.f2t());
             
-//            if (valAcc.f2t() > 0.1)
-//                net.toJSON("");
         }
         
-        //} while (xLoss.f2t() > 1.0);
+//            if (valAcc.f2t() > 0.6)
+//                net.toJSON("/home/gola/Documents/mnist_test.json");
+        
+//        }while (trainAcc.f2t() < 0.66);
         
         long end = new Date().getTime();
         System.out.println("All training time: " + (end-start) + " ms");

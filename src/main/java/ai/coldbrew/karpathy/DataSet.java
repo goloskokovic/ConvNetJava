@@ -1,6 +1,7 @@
 package ai.coldbrew.karpathy;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -59,6 +60,14 @@ public class DataSet {
         
         if (folderPath.equals(rootFolder))
             writer.close();
-    }   
+    }
+    
+    public static void crateTextFile(String fileName, String json) throws IOException {
+    
+        FileWriter file = new FileWriter(fileName);
+        file.write(json);
+        file.flush();
+        file.close();
+    }
     
 }

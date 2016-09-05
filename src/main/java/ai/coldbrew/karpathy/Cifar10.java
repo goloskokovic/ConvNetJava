@@ -53,7 +53,7 @@ public class Cifar10 {
         int iteration = 0;
         long start = new Date().getTime();
         
-        do {
+//        do {
         
         for(String path : paths) {
             
@@ -99,7 +99,7 @@ public class Cifar10 {
             System.out.println("Validation accuracy: " + valAcc.f2t());
         }
         
-        } while (trainAcc.f2t() < 0.65 || valAcc.f2t() < 0.56);
+//        }while (trainAcc.f2t() < 0.65 || valAcc.f2t() < 0.56);
         
         long end = new Date().getTime();
         System.out.println("All training time: " + (end - start) + " ms");

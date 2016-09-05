@@ -44,18 +44,18 @@ public class Net {
 
         switch(def.type) {
           case "fc": layers[i] = new FullyConnLayer(def); break;
-          //case "lrn": layers[i] = new global.LocalResponseNormalizationLayer(def)); break;
-          //case "dropout": layers[i] = new global.DropoutLayer(def)); break;
+          //case "lrn": layers[i] = new LocalResponseNormalizationLayer(def); break;
+          //case "dropout": layers[i] = new DropoutLayer(def); break;
           case "input": layers[i] = new InputLayer(def); break;
           case "softmax": layers[i] = new SoftmaxLayer(def); break;
-          //case "regression": layers[i] = new global.RegressionLayer(def)); break;
+          //case "regression": layers[i] = new RegressionLayer(def); break;
           case "conv": layers[i] = new ConvLayer(def); break;
           case "pool": layers[i] = new PoolLayer(def); break;
           case "relu": layers[i] = new ReluLayer(def); break;
-          //case "sigmoid": layers[i] = new global.SigmoidLayer(def)); break;
-          //case "tanh": layers[i] = new global.TanhLayer(def)); break;
-          //case "maxout": layers[i] = new global.MaxoutLayer(def)); break;
-          //case "svm": layers[i] = new global.SVMLayer(def)); break;
+          //case "sigmoid": layers[i] = SigmoidLayer(def); break;
+          //case "tanh": layers[i] = new TanhLayer(def); break;
+          //case "maxout": layers[i] = new MaxoutLayer(def); break;
+          //case "svm": layers[i] = new SVMLayer(def); break;
           default: System.out.println("ERROR: UNRECOGNIZED LAYER TYPE: " + def.type);
         }
       }
@@ -205,7 +205,7 @@ public class Net {
       return maxi; // return index of the class with highest class probability
     }
        
-    void toJSON(String jsonFile) {
+    void toJSON(String filePath) throws java.lang.Exception {
     
         JSONObject network = new JSONObject();
         JSONArray jsonLayers = new JSONArray();
@@ -216,7 +216,6 @@ public class Net {
                 case "conv": {
                     JSONObject jsonLayer = new JSONObject();
                     ConvLayer l = (ConvLayer)layer;
-                    //{"sx":5,"sy":5,"stride":1,"in_depth":3,"out_depth":16,"out_sx":32,"out_sy":32,"layer_type":"conv","l1_decay_mul":0,"l2_decay_mul":1,"pad":2,
                     jsonLayer.put("sx", l.sx);
                     jsonLayer.put("sy", l.sy);
                     jsonLayer.put("stride", l.stride);
@@ -228,6 +227,47 @@ public class Net {
                     jsonLayer.put("l1_decay_mul", l.l1_decay_mul);
                     jsonLayer.put("l2_decay_mul", l.l2_decay_mul);
                     jsonLayer.put("pad", l.pad);
+                    
+                    JSONArray jsonFilters = new JSONArray();
+                    for (Vol filter : l.filters) {
+                        JSONObject jsonFilter = new JSONObject();
+                        jsonFilter.put("sx", filter.sx);
+                        jsonFilter.put("sy", filter.sy);
+                        jsonFilter.put("depth", filter.depth);
+                    
+                        JSONObject jsonW = new JSONObject();
+                        for(int wI=0; wI<filter.w.length; wI++) { 
+                            jsonW.put((String.valueOf(wI)), filter.w[wI]);
+                        }
+                        jsonFilter.put("w", jsonW);
+                        jsonFilters.put(jsonFilter);
+                    }
+                                        
+                    JSONObject jsonBiases = new JSONObject();
+                    jsonBiases.put("sx", l.biases.sx);
+                    jsonBiases.put("sy", l.biases.sy);
+                    jsonBiases.put("depth", l.biases.depth);
+                    
+                    JSONObject jsonW = new JSONObject();
+                    for(int wI=0; wI<l.biases.w.length; wI++) { 
+                        jsonW.put((String.valueOf(wI)), l.biases.w[wI]);
+                    }
+                    
+                    jsonBiases.put("w", jsonW);
+                    jsonLayer.put("biases", jsonBiases);
+                    jsonLayers.put(jsonLayer);
+                                       
+                    break;
+                }
+                case "fc": {
+                    JSONObject jsonLayer = new JSONObject();
+                    FullyConnLayer l = (FullyConnLayer)layer;
+                    jsonLayer.put("out_depth", l.out_depth);
+                    jsonLayer.put("out_sx", l.out_sx);
+                    jsonLayer.put("out_sy", l.out_sy);
+                    jsonLayer.put("num_inputs", l.num_inputs);
+                    jsonLayer.put("l1_decay_mul", l.l1_decay_mul);
+                    jsonLayer.put("l2_decay_mul", l.l2_decay_mul);                    
                     
                     JSONArray jsonFilters = new JSONArray();
                     for (Vol filter : l.filters) {
@@ -306,12 +346,14 @@ public class Net {
             }
         }
         
+        DataSet.crateTextFile(filePath, network.toString());
+        
     }
     
-    void fromJSON(String jsonFile) throws java.lang.Exception {
+    void fromJSON(String filePath) throws java.lang.Exception {
         
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(new java.io.File(jsonFile));
+        JsonNode root = mapper.readTree(new java.io.File(filePath));
         JsonNode layersNode = root.path("layers");
         
         if (layersNode.size() != layers.length)
