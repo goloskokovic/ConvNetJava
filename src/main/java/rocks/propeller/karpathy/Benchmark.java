@@ -8,7 +8,7 @@ package rocks.propeller.karpathy;
 import java.util.Date;
 
 /**
- *
+ * https://github.com/soumith/convnet-benchmarks/blob/master/convnet.js/output.log
  * @author gola
  */
 public class Benchmark {
