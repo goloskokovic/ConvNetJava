@@ -1,4 +1,4 @@
-package ai.coldbrew.karpathy;
+package rocks.propeller.karpathy;
 
 /**
  *

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ai.coldbrew.karpathy;
+package rocks.propeller.karpathy;
 
 import java.util.ArrayList;
 
